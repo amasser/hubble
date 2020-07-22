@@ -58,6 +58,13 @@ overhead while providing deep and detailed visibility where required. Hubble
 has been created and specifically designed to make best use of these new [eBPF]
 powers.
 
+## Releases
+
+| Version                                            | Release Date | Supported Cilium Version | Artifacts                                                              |
+|----------------------------------------------------|--------------|--------------------------|------------------------------------------------------------------------|
+| [v0.6](https://github.com/cilium/hubble/tree/v0.6) | 2020-05-29   | Cilium 1.8               | [GitHub Release](https://github.com/cilium/hubble/releases/tag/v0.6.1) |
+| [v0.5](https://github.com/cilium/hubble/tree/v0.5) | 2020-03-23   | Cilium 1.7               | [GitHub Release](https://github.com/cilium/hubble/releases/tag/v0.5.1) |
+
 ## Feature Stability State
 
 Hubble is currently in beta stage. We encourage contributions and feedback to
@@ -76,9 +83,8 @@ this means:
 
 # Getting Started
 
-* [Installation](Documentation/installation.md)
-* [Documentation](Documentation/README.md)
-* [Tutorials](tutorials/README.md)
+* [Introduction to Cilium & Hubble](https://docs.cilium.io/en/latest/intro/)
+* [Networking and Security Observability with Hubble](https://docs.cilium.io/en/latest/gettingstarted/hubble/)
 
 # Features
 
@@ -180,7 +186,7 @@ Identifying pods which have received DNS response indicating failure:
 
 # Community
 
-Join the [Cilium Slack #hubble channel](https://cilium.herokuapp.com/) to chat with Cilium Hublbe developers and other Cilium / Hubble users. This is a good place to learn about Hubble and Cilium, ask questions, and share your experiences.
+Join the [Cilium Slack #hubble channel](https://cilium.herokuapp.com/) to chat with Cilium Hubble developers and other Cilium / Hubble users. This is a good place to learn about Hubble and Cilium, ask questions, and share your experiences.
 
 Learn more about [Cilium](http://cilium.io).
 

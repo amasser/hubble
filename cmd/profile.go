@@ -1,4 +1,4 @@
-// Copyright 2019 Authors of Hubble
+// Copyright 2017-2020 Authors of Hubble
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,50 +12,83 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build pprof
+
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"runtime/pprof"
 
-	"go.uber.org/zap"
+	"github.com/spf13/cobra"
 )
 
-// Look at the set observe flags, and optionally enable cpu, memory, or both,
-// profiling.
-//
-// Returns a function which should be deferred to the end of the execution so
-// profiles can be finalized.
-func maybeProfile() func() {
-	var cf, mf *os.File
+var (
+	cpuprofile, memprofile         string
+	cpuprofileFile, memprofileFile *os.File
+)
+
+func init() {
+	persistentPreRunE := RootCmd.PersistentPreRunE
+	RootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if persistentPreRunE != nil {
+			if err := persistentPreRunE(cmd, args); err != nil {
+				return err
+			}
+		}
+		return pprofInit()
+	}
+	prersistentPostRunE := RootCmd.PersistentPostRunE
+	RootCmd.PersistentPostRunE = func(cmd *cobra.Command, args []string) error {
+		if prersistentPostRunE != nil {
+			if err := prersistentPostRunE(cmd, args); err != nil {
+				return err
+			}
+		}
+		return pprofTearDown()
+	}
+
+	RootCmd.PersistentFlags().StringVar(&cpuprofile,
+		"cpuprofile", "", "Enable CPU profiling",
+	)
+	RootCmd.PersistentFlags().StringVar(&memprofile,
+		"memprofile", "", "Enable memory profiling",
+	)
+	RootCmd.PersistentFlags().Lookup("cpuprofile").Hidden = true
+	RootCmd.PersistentFlags().Lookup("memprofile").Hidden = true
+}
+
+func pprofInit() error {
 	var err error
 	if cpuprofile != "" {
-		cf, err = os.Create(cpuprofile)
+		cpuprofileFile, err = os.Create(cpuprofile)
 		if err != nil {
-			log.Fatal("failed to create cpu profile", zap.Error(err))
+			return fmt.Errorf("failed to create cpu profile: %v", err)
 		}
-		pprof.StartCPUProfile(cf)
+		pprof.StartCPUProfile(cpuprofileFile)
 	}
-
 	if memprofile != "" {
-		mf, err = os.Create(memprofile)
+		memprofileFile, err = os.Create(memprofile)
 		if err != nil {
-			log.Fatal("failed to create memory profile", zap.Error(err))
+			return fmt.Errorf("failed to create memory profile: %v", err)
 		}
 	}
+	return nil
+}
 
-	return func() {
-		if cf != nil {
-			pprof.StopCPUProfile()
-			cf.Close()
-		}
-		if mf != nil {
-			runtime.GC() // get up-to-date statistics
-			if err := pprof.WriteHeapProfile(mf); err != nil {
-				log.Fatal("failed to write memory profile", zap.Error(err))
-			}
-			mf.Close()
-		}
+func pprofTearDown() error {
+	if cpuprofileFile != nil {
+		pprof.StopCPUProfile()
+		cpuprofileFile.Close()
 	}
+	if memprofileFile != nil {
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(memprofileFile); err != nil {
+			return fmt.Errorf("failed to write memory profile: %v", err)
+		}
+		memprofileFile.Close()
+	}
+	return nil
 }

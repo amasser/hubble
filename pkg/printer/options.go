@@ -16,8 +16,7 @@ package printer
 
 import (
 	"io"
-	"os"
-	"syscall"
+	"io/ioutil"
 )
 
 // Output enum of the printer.
@@ -33,16 +32,17 @@ const (
 	// DictOutput presents the same information as TabOutput, but each flow is
 	// presented as a key:value dictionary, similar to \G output of mysql.
 	DictOutput
+	// JSONPBOutput prints GetFlowsResponse as JSON according to proto3's JSON mapping.
+	JSONPBOutput
 )
 
 // Options for the printer.
 type Options struct {
-	output      Output
-	w           io.Writer
-	werr        io.Writer
-	withNewLine bool
-	// Use json.Encoder instead of gojay
-	withJSONEncoder bool
+	output              Output
+	w                   io.Writer
+	werr                io.Writer
+	enableDebug         bool
+	enableIPTranslation bool
 }
 
 // Option ...
@@ -52,6 +52,13 @@ type Option func(*Options)
 func JSON() Option {
 	return func(opts *Options) {
 		opts.output = JSONOutput
+	}
+}
+
+// JSONPB encodes GetFlowsResponse as JSON according to proto3's JSON mapping.
+func JSONPB() Option {
+	return func(opts *Options) {
+		opts.output = JSONPBOutput
 	}
 }
 
@@ -69,6 +76,13 @@ func Dict() Option {
 	}
 }
 
+// Tab prints flows in even tab-aligned columns.
+func Tab() Option {
+	return func(opts *Options) {
+		opts.output = TabOutput
+	}
+}
+
 // Writer sets the custom destination for where the bytes are sent.
 func Writer(w io.Writer) Option {
 	return func(opts *Options) {
@@ -76,23 +90,23 @@ func Writer(w io.Writer) Option {
 	}
 }
 
-// WithNewLine sets the output to have a new line appended on each line.
-func WithNewLine() Option {
-	return func(opts *Options) {
-		opts.withNewLine = true
-	}
-}
-
-// WithJSONEncoder configures the JSON output to use json.Encoder instead of gojay.
-func WithJSONEncoder() Option {
-	return func(opts *Options) {
-		opts.withJSONEncoder = true
-	}
-}
-
 // IgnoreStderr configures the output to not print any
 func IgnoreStderr() Option {
 	return func(opts *Options) {
-		opts.werr = os.NewFile(uintptr(syscall.Stderr), os.DevNull)
+		opts.werr = ioutil.Discard
+	}
+}
+
+// WithDebug enables debug messages
+func WithDebug() Option {
+	return func(opts *Options) {
+		opts.enableDebug = true
+	}
+}
+
+// WithIPTranslation enables translation from IPs to pod names, FQDNs, and service names.
+func WithIPTranslation() Option {
+	return func(opts *Options) {
+		opts.enableIPTranslation = true
 	}
 }

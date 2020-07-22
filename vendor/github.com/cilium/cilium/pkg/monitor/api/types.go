@@ -29,10 +29,26 @@ import (
 const (
 	// 0-128 are reserved for BPF datapath events
 	MessageTypeUnspec = iota
+
+	// MessageTypeDrop is a BPF datapath notification carrying a DropNotify
+	// which corresponds to drop_notify defined in bpf/lib/drop.h
 	MessageTypeDrop
+
+	// MessageTypeDebug is a BPF datapath notification carrying a DebugMsg
+	// which corresponds to debug_msg defined in bpf/lib/dbg.h
 	MessageTypeDebug
+
+	// MessageTypeCapture is a BPF datapath notification carrying a DebugCapture
+	// which corresponds to debug_capture_msg defined in bpf/lib/dbg.h
 	MessageTypeCapture
+
+	// MessageTypeTrace is a BPF datapath notification carrying a TraceNotify
+	// which corresponds to trace_notify defined in bpf/lib/trace.h
 	MessageTypeTrace
+
+	// MessageTypePolicyVerdict is a BPF datapath notification carrying a PolicyVerdictNotify
+	// which corresponds to policy_verdict_notify defined in bpf/lib/policy_log.h
+	MessageTypePolicyVerdict
 
 	// 129-255 are reserved for agent level events
 
@@ -44,12 +60,13 @@ const (
 )
 
 const (
-	MessageTypeNameDrop    = "drop"
-	MessageTypeNameDebug   = "debug"
-	MessageTypeNameCapture = "capture"
-	MessageTypeNameTrace   = "trace"
-	MessageTypeNameL7      = "l7"
-	MessageTypeNameAgent   = "agent"
+	MessageTypeNameDrop          = "drop"
+	MessageTypeNameDebug         = "debug"
+	MessageTypeNameCapture       = "capture"
+	MessageTypeNameTrace         = "trace"
+	MessageTypeNameL7            = "l7"
+	MessageTypeNameAgent         = "agent"
+	MessageTypeNamePolicyVerdict = "policy-verdict"
 )
 
 type MessageTypeFilter []int
@@ -57,12 +74,13 @@ type MessageTypeFilter []int
 var (
 	// MessageTypeNames is a map of all type names
 	MessageTypeNames = map[string]int{
-		MessageTypeNameDrop:    MessageTypeDrop,
-		MessageTypeNameDebug:   MessageTypeDebug,
-		MessageTypeNameCapture: MessageTypeCapture,
-		MessageTypeNameTrace:   MessageTypeTrace,
-		MessageTypeNameL7:      MessageTypeAccessLog,
-		MessageTypeNameAgent:   MessageTypeAgent,
+		MessageTypeNameDrop:          MessageTypeDrop,
+		MessageTypeNameDebug:         MessageTypeDebug,
+		MessageTypeNameCapture:       MessageTypeCapture,
+		MessageTypeNameTrace:         MessageTypeTrace,
+		MessageTypeNameL7:            MessageTypeAccessLog,
+		MessageTypeNameAgent:         MessageTypeAgent,
+		MessageTypeNamePolicyVerdict: MessageTypePolicyVerdict,
 	}
 )
 
@@ -171,6 +189,8 @@ const (
 	AgentNotifyEndpointDeleted
 	AgentNotifyIPCacheUpserted
 	AgentNotifyIPCacheDeleted
+	AgentNotifyServiceUpserted
+	AgentNotifyServiceDeleted
 )
 
 var notifyTable = map[AgentNotification]string{
@@ -185,6 +205,8 @@ var notifyTable = map[AgentNotification]string{
 	AgentNotifyIPCacheUpserted:           "IPCache entry upserted",
 	AgentNotifyPolicyUpdated:             "Policy updated",
 	AgentNotifyPolicyDeleted:             "Policy deleted",
+	AgentNotifyServiceDeleted:            "Service deleted",
+	AgentNotifyServiceUpserted:           "Service upserted",
 }
 
 func resolveAgentType(t AgentNotification) string {
@@ -355,4 +377,102 @@ func TimeRepr(t time.Time) (string, error) {
 	}
 	repr, err := json.Marshal(notification)
 	return string(repr), err
+}
+
+// ServiceUpsertNotificationAddr is part of ServiceUpsertNotification
+type ServiceUpsertNotificationAddr struct {
+	IP   net.IP `json:"ip"`
+	Port uint16 `json:"port"`
+}
+
+// ServiceUpsertNotification structures service upsert notifications
+type ServiceUpsertNotification struct {
+	ID uint32 `json:"id"`
+
+	Frontend ServiceUpsertNotificationAddr   `json:"frontend-address"`
+	Backends []ServiceUpsertNotificationAddr `json:"backend-addresses"`
+
+	Type          string `json:"type,omitempty"`
+	TrafficPolicy string `json:"traffic-policy,omitempty"`
+
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,,omitempty"`
+}
+
+// ServiceUpsertRepr returns string representation of monitor notification
+func ServiceUpsertRepr(
+	id uint32,
+	frontend ServiceUpsertNotificationAddr,
+	backends []ServiceUpsertNotificationAddr,
+	svcType, svcTrafficPolicy, svcName, svcNamespace string,
+) (string, error) {
+	notification := ServiceUpsertNotification{
+		ID:            id,
+		Frontend:      frontend,
+		Backends:      backends,
+		Type:          svcType,
+		TrafficPolicy: svcTrafficPolicy,
+		Name:          svcName,
+		Namespace:     svcNamespace,
+	}
+	repr, err := json.Marshal(notification)
+	return string(repr), err
+}
+
+// ServiceDeleteNotification structures service delete notifications
+type ServiceDeleteNotification struct {
+	ID uint32 `json:"id"`
+}
+
+// ServiceDeleteRepr returns string representation of monitor notification
+func ServiceDeleteRepr(
+	id uint32,
+) (string, error) {
+	notification := ServiceDeleteNotification{
+		ID: id,
+	}
+	repr, err := json.Marshal(notification)
+	return string(repr), err
+}
+
+const (
+	// PolicyIngress is the value of Flags&PolicyNotifyFlagDirection for ingress traffic
+	PolicyIngress = 1
+
+	// PolicyEgress is the value of Flags&PolicyNotifyFlagDirection for egress traffic
+	PolicyEgress = 2
+
+	// PolicyMatchNone is the value of MatchType indicatating no policy match
+	PolicyMatchNone = 0
+
+	// PolicyMatchL3Only is the value of MatchType indicating a L3-only match
+	PolicyMatchL3Only = 1
+
+	// PolicyMatchL3L4 is the value of MatchType indicating a L3+L4 match
+	PolicyMatchL3L4 = 2
+
+	// PolicyMatchL4Only is the value of MatchType indicating a L4-only match
+	PolicyMatchL4Only = 3
+
+	// PolicyMatchAll is the value of MatchType indicating an allow-all match
+	PolicyMatchAll = 4
+)
+
+type PolicyMatchType int
+
+func (m PolicyMatchType) String() string {
+	switch m {
+	case PolicyMatchL3Only:
+		return "L3-Only"
+	case PolicyMatchL3L4:
+		return "L3-L4"
+	case PolicyMatchL4Only:
+		return "L4-Only"
+	case PolicyMatchAll:
+		return "all"
+	case PolicyMatchNone:
+		return "none"
+
+	}
+	return "unknown"
 }

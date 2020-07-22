@@ -31,6 +31,10 @@ const (
 	// IDNameHost is the label used for the hostname ID.
 	IDNameHost = "host"
 
+	// IDNameRemoteNode is the label used to describe the
+	// ReservedIdentityRemoteNode
+	IDNameRemoteNode = "remote-node"
+
 	// IDNameWorld is the label used for the world ID.
 	IDNameWorld = "world"
 
@@ -61,6 +65,9 @@ const (
 var (
 	// LabelHealth is the label used for health.
 	LabelHealth = Labels{IDNameHealth: NewLabel(IDNameHealth, "", LabelSourceReserved)}
+
+	// LabelHost is the label used for the host endpoint.
+	LabelHost = Labels{IDNameHost: NewLabel(IDNameHost, "", LabelSourceReserved)}
 )
 
 const (
@@ -438,7 +445,7 @@ func (l Label) FormatForKVStore() string {
 // DO NOT BREAK THE FORMAT OF THIS. THE RETURNED STRING IS USED AS KEY IN
 // THE KEY-VALUE STORE.
 func (l Labels) SortedList() []byte {
-	var keys []string
+	keys := make([]string, 0, len(l))
 	for k := range l {
 		keys = append(keys, k)
 	}

@@ -87,6 +87,9 @@ const (
 	// L4PolicyID is the identifier of a L4 Policy
 	L4PolicyID = "PolicyID.L4"
 
+	// IsRedirect is a boolean for if the entry is a redirect or not
+	IsRedirect = "IsRedirect"
+
 	// DNSName is a FQDN or not fully qualified name intended for DNS lookups
 	DNSName = "dnsName"
 
@@ -144,6 +147,12 @@ const (
 	// Port is a L4 port
 	Port = "port"
 
+	// PortName is a k8s ContainerPort Name
+	PortName = "portName"
+
+	// NamedPorts is a set of named ports
+	NamedPorts = "namedPorts"
+
 	// Family is the L3 protocol family
 	Family = "family"
 
@@ -155,6 +164,12 @@ const (
 
 	// V6Prefix is a IPv6 subnet/CIDR prefix
 	V6Prefix = "v6Prefix"
+
+	// CIDR is a IPv4/IPv4 subnet/CIDR
+	CIDR = "cidr"
+
+	// MTU is the maximum transmission unit of one interface
+	MTU = "mtu"
 
 	// Interface is an interface id/name on the system
 	Interface = "interface"
@@ -177,6 +192,16 @@ const (
 	// ServiceName is the orchestration framework name for a service
 	ServiceName = "serviceName"
 
+	// ServiceNamespace is the orchestration framework namespace of a service name
+	ServiceNamespace = "serviceNamespace"
+
+	// SessionAffinity indicates whether the ClientIP session affinity is enabled
+	// for the service
+	SessionAffinity = "sessionAffinity"
+
+	// SessionAffinityTimeout is a timeout for the session affinity
+	SessionAffinityTimeout = "sessionAffinityTimeout"
+
 	// ClusterName is the name of the cluster
 	ClusterName = "clusterName"
 
@@ -194,6 +219,12 @@ const (
 
 	// ServiceType is the type of the service
 	ServiceType = "svcType"
+
+	// ServiceHealthCheckNodePort is the port on which we serve health checks
+	ServiceHealthCheckNodePort = "svcHealthCheckNodePort"
+
+	// ServiceTrafficPolicy is the traffic policy of the service
+	ServiceTrafficPolicy = "svcTrafficPolicy"
 
 	// BackendIDs is the map of backend IDs (lbmap) indexed by backend address
 	BackendIDs = "backendIDs"
@@ -228,6 +259,12 @@ const (
 	// Device is the device name
 	Device = "device"
 
+	// Devices is the devices name
+	Devices = "devices"
+
+	//DirectRoutingDevice is the name of the direct routing device
+	DirectRoutingDevice = "directRoutingDevice"
+
 	// IpvlanMasterDevice is the ipvlan master device name
 	IpvlanMasterDevice = "ipvlanMasterDevice"
 
@@ -236,6 +273,9 @@ const (
 
 	// Tunnel is the tunnel name
 	Tunnel = "tunnel"
+
+	// Selector is a selector of any sort: endpoint, CIDR, toFQDNs
+	Selector = "Selector"
 
 	// EndpointLabelSelector is a selector for Endpoints by label
 	EndpointLabelSelector = "EndpointLabelSelector"
@@ -301,6 +341,9 @@ const (
 	// XDSResource is an xDS resource message.
 	XDSResource = "xdsResource"
 
+	// XDSDetail is detail string included in XDS NACKs.
+	XDSDetail = "xdsDetail"
+
 	// K8s-specific
 
 	// K8sNodeID is the k8s ID of a K8sNode
@@ -338,6 +381,9 @@ const (
 
 	// K8sAPIVersion is the version of the k8s API an object has
 	K8sAPIVersion = "k8sApiVersion"
+
+	// K8sNodeIP is the k8s Node IP (either InternalIP or ExternalIP)
+	K8sNodeIP = "k8sNodeIP"
 
 	// Attempt is the attempt number if an operation is attempted multiple times
 	Attempt = "attempt"
